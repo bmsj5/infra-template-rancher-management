@@ -1,0 +1,35 @@
+# =============================================================================
+# Example Terraform Variables
+# =============================================================================
+# Copy/Rename to "terraform.tfvars" and customize this file for your environment.
+#
+# Required environment variables (set before running):
+#   export TF_VAR_hcloud_token="your-hetzner-token"
+#   export TF_VAR_cloudflare_api_token="your-cloudflare-token"
+# =============================================================================
+
+# SSH Configuration
+ssh_key_path = "~/.ssh/id_rsa.pub"
+
+# Domain Configuration
+domain_name       = "yourdomain.com"
+letsencrypt_email = "admin@yourdomain.com"
+
+# Cluster Configuration
+cluster_name = "rancher-management-cluster-my-project"
+
+# Number of RKE2 nodes to create (must be >= 3 for HA, defaults to 3)
+# node_count = 3
+
+# RKE2 version to install (defaults to v1.34.2+rke2r1)
+# rke2_version = "v1.34.2+rke2r1"
+
+# Cloud provider region for the servers (defaults to fsn1)
+# region = "fsn1"
+
+# Cloud provider server type (defaults to cx23)
+# server_type = "cx23"
+
+# Enable Hetzner Cloud Load Balancer for production-grade HA (defaults to false)
+# Recommended for production deployments. If false, uses DNS round-robin.
+# enable_load_balancer = false
