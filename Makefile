@@ -7,13 +7,17 @@
 # structure. Adjust ANSIBLE_PLAYBOOKS_DIR and HELM_CHARTS_DIR as needed.
 # =============================================================================
 
-.PHONY: help init plan apply destroy export-outputs setup-env deploy-traefik deploy-cert-manager deploy-rancher deploy-all
+.PHONY: help init plan apply destroy export-outputs setup-env deploy-traefik deploy-cert-manager deploy-rancher deploy-all bootstrap-gitops-secret bootstrap-gitops-repo bootstrap-gitops
 
 # Configuration
 TF_DIR := $(shell pwd)
 ANSIBLE_PLAYBOOKS_DIR := $(shell dirname $(TF_DIR))/ci-cd-templates/ansible/playbooks
 HELM_CHARTS_DIR := $(shell dirname $(TF_DIR))/ci-cd-templates/helm-charts
 TF_OUTPUT_JSON := $(TF_DIR)/.terraform-outputs.json
+GITOPTS_SSH_KEY_PATH ?=
+BOOTSTRAP_GITREPO_MANIFEST ?=
+FLEET_NS := fleet-default
+GITREPO_SECRET_NAME := skies-dota-gitops-ssh-key
 
 # Detect Terraform/OpenTofu binary
 TF_BINARY := $(shell command -v tofu >/dev/null 2>&1 && echo "tofu" || echo "terraform")
@@ -72,3 +76,25 @@ deploy-rancher: ## Deploy Rancher server
 		ansible-playbook -i localhost, $(ANSIBLE_PLAYBOOKS_DIR)/deploy-rancher.yaml
 
 deploy-all: deploy-traefik deploy-cert-manager deploy-rancher ## Deploy all services in order
+
+# -----------------------------------------------------------------------------
+# GitOps bootstrap (Fleet): SSH secret + GitRepo CRD. Run after deploy-rancher.
+# Requires: GITOPTS_SSH_KEY_PATH (private key for git clone), BOOTSTRAP_GITREPO_MANIFEST (path to main-repo.yaml).
+# -----------------------------------------------------------------------------
+bootstrap-gitops-secret: ## Create Fleet SSH secret in fleet-default for GitOps repo clone
+	@test -n "$(GITOPTS_SSH_KEY_PATH)" || (echo "Error: set GITOPTS_SSH_KEY_PATH to the private key path for GitOps repo clone." >&2 && exit 1)
+	@test -f "$(GITOPTS_SSH_KEY_PATH)" || (echo "Error: Private key file not found: $(GITOPTS_SSH_KEY_PATH)" >&2 && exit 1)
+	@echo "Creating Fleet SSH secret $(GITREPO_SECRET_NAME) in $(FLEET_NS)..."
+	@cd $(TF_DIR) && export KUBECONFIG="$$($(TF_BINARY) output -raw kubeconfig_path)" && \
+		kubectl create secret generic $(GITREPO_SECRET_NAME) -n $(FLEET_NS) \
+		--from-file=ssh-privatekey="$(GITOPTS_SSH_KEY_PATH)" \
+		--type=kubernetes.io/ssh-auth \
+		--dry-run=client -o yaml | kubectl apply -f -
+
+bootstrap-gitops-repo: ## Apply GitRepo CRD to register GitOps repo in Fleet
+	@test -n "$(BOOTSTRAP_GITREPO_MANIFEST)" || (echo "Error: set BOOTSTRAP_GITREPO_MANIFEST to the path of your GitRepo YAML." >&2 && exit 1)
+	@test -f "$(BOOTSTRAP_GITREPO_MANIFEST)" || (echo "Error: GitRepo manifest not found: $(BOOTSTRAP_GITREPO_MANIFEST)" >&2 && exit 1)
+	@echo "Applying GitRepo from $(BOOTSTRAP_GITREPO_MANIFEST)..."
+	@cd $(TF_DIR) && KUBECONFIG="$$($(TF_BINARY) output -raw kubeconfig_path)" kubectl apply -f "$(BOOTSTRAP_GITREPO_MANIFEST)"
+
+bootstrap-gitops: bootstrap-gitops-secret bootstrap-gitops-repo ## Create SSH secret and apply GitRepo (full GitOps bootstrap)

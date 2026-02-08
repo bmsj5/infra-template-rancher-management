@@ -106,6 +106,18 @@ make apply
 - `make deploy-cert-manager` - Deploy cert-manager via Ansible
 - `make deploy-rancher` - Deploy Rancher server via Ansible
 
+### GitOps bootstrap (Fleet)
+Run after Rancher is deployed. Requires `KUBECONFIG` (from Terraform output; used automatically).
+
+- `make bootstrap-gitops-secret` - Create Fleet SSH secret in `fleet-default` for private Git clone. **Required:** `GITOPTS_SSH_KEY_PATH` — path to private key (e.g. GitHub deploy key; PEM, no passphrase).
+- `make bootstrap-gitops-repo` - Apply GitRepo CRD to register your GitOps repo. **Required:** `BOOTSTRAP_GITREPO_MANIFEST` — path to your GitRepo YAML file.
+- `make bootstrap-gitops` - Run both (secret first, then GitRepo).
+
+Example:
+```bash
+make bootstrap-gitops GITOPTS_SSH_KEY_PATH=~/.ssh/my-gitops-deploy-key BOOTSTRAP_GITREPO_MANIFEST=/path/to/your/gitrepo.yaml
+```
+
 ## Outputs
 
 All outputs are exported to `.terraform-outputs.json` and automatically set in Ansible playbooks via the Makefile.
