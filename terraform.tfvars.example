@@ -27,8 +27,8 @@ cluster_name = "rancher-management-cluster-my-project"
 # Cloud provider region for the servers (defaults to fsn1)
 # region = "fsn1"
 
-# Cloud provider server type (defaults to cx23)
-# server_type = "cx23"
+# Cloud provider server type (defaults to cx33)
+# server_type = "cx33"
 
 # Enable Hetzner Cloud Load Balancer for production-grade HA (defaults to false)
 # Recommended for production deployments. If false, uses DNS round-robin.

@@ -85,7 +85,7 @@ variable "region" {
 variable "server_type" {
   description = "Cloud provider server type"
   type        = string
-  default     = "cx23"
+  default     = "cx33"
   validation {
     condition = contains([
       "cx23", "cx33", "cx43", "cx53",

@@ -16,8 +16,8 @@ write_files:
     content: |
       token: "${cluster_token}"
       tls-san:
-        - "127.0.0.1"
-        - "localhost"
+        - 127.0.0.1
+        - localhost
         - "${cluster_domain}"
       cni: [cilium]
       disable:
@@ -25,55 +25,11 @@ write_files:
         - rke2-snapshot-controller
         - rke2-snapshot-validation-webhook
       kubelet-arg:
-        - "cpu-manager-policy=static"
-        - "system-reserved=cpu=${reserved_cpu_m}m"
+        - cpu-manager-policy=static
+        - system-reserved=cpu=${reserved_cpu_m}m
 %{ if node_index == 0 }
       cluster-init: true
 %{ endif }
-
-  # CoreDNS HA configuration
-  - path: /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml
-    content: |
-      apiVersion: helm.cattle.io/v1
-      kind: HelmChartConfig
-      metadata:
-        name: rke2-coredns
-        namespace: kube-system
-      spec:
-        valuesContent: |-
-          replicaCount: 3
-
-  # Traefik HA configuration
-  - path: /var/lib/rancher/rke2/server/manifests/rke2-traefik-config.yaml
-    content: |
-      apiVersion: helm.cattle.io/v1
-      kind: HelmChartConfig
-      metadata:
-        name: rke2-traefik
-        namespace: kube-system
-      spec:
-        valuesContent: |-
-          deployment:
-            enabled: false
-          daemonset:
-            enabled: true
-          resources:
-            requests:
-              cpu: "1"
-              memory: "512Mi"
-            limits:
-              cpu: "1"
-              memory: "512Mi"
-          hostNetwork: true
-          service:
-            enabled: false
-          ports:
-            web:
-              hostPort: 80
-              expose: true
-            websecure:
-              hostPort: 443
-              expose: true
 
 runcmd:
   - echo "Installing RKE2 on ${node_hostname}..."
