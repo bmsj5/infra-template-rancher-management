@@ -109,13 +109,13 @@ make apply
 ### GitOps bootstrap (Fleet)
 Run after Rancher is deployed. Requires `KUBECONFIG` (from Terraform output; used automatically).
 
-- `make bootstrap-gitops-secret` - Create Fleet SSH secret in `fleet-default` for private Git clone. **Required:** `GITOPTS_SSH_KEY_PATH` — path to private key (e.g. GitHub deploy key; PEM, no passphrase).
+- `make bootstrap-gitops-secret` - Create Fleet SSH secret for private Git clone. **Required:** `GITOPTS_SSH_KEY_PATH` — path to private key (e.g. GitHub deploy key; PEM, no passphrase), `FLEET_NS` — Fleet namespace, `GITREPO_SECRET_NAME` — name for the SSH secret.
 - `make bootstrap-gitops-repo` - Apply GitRepo CRD to register your GitOps repo. **Required:** `BOOTSTRAP_GITREPO_MANIFEST` — path to your GitRepo YAML file.
 - `make bootstrap-gitops` - Run both (secret first, then GitRepo).
 
 Example:
 ```bash
-make bootstrap-gitops GITOPTS_SSH_KEY_PATH=~/.ssh/my-gitops-deploy-key BOOTSTRAP_GITREPO_MANIFEST=/path/to/your/gitrepo.yaml
+make bootstrap-gitops FLEET_NS=fleet-default GITREPO_SECRET_NAME=skies-dota-gitops-ssh-key GITOPTS_SSH_KEY_PATH=~/.ssh/my-gitops-deploy-key BOOTSTRAP_GITREPO_MANIFEST=/path/to/your/gitrepo.yaml
 ```
 
 ## Outputs

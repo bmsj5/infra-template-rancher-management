@@ -16,7 +16,7 @@ domain_name       = "yourdomain.com"
 letsencrypt_email = "admin@yourdomain.com"
 
 # Cluster Configuration
-cluster_name = "rancher-management-cluster-my-project"
+cluster_name = "myproject-rancher-management"
 
 # Number of RKE2 nodes to create (must be >= 3 for HA, defaults to 3)
 # node_count = 3
