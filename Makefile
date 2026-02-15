@@ -16,8 +16,9 @@ HELM_CHARTS_DIR := $(shell dirname $(TF_DIR))/ci-cd-templates/helm-charts
 TF_OUTPUT_JSON := $(TF_DIR)/.terraform-outputs.json
 GITOPTS_SSH_KEY_PATH ?=
 BOOTSTRAP_GITREPO_MANIFEST ?=
-FLEET_NS := fleet-default
-GITREPO_SECRET_NAME := skies-dota-gitops-ssh-key
+# fleet-default or fleet-local
+FLEET_NS ?=
+GITREPO_SECRET_NAME ?=
 
 # Detect Terraform/OpenTofu binary
 TF_BINARY := $(shell command -v tofu >/dev/null 2>&1 && echo "tofu" || echo "terraform")
@@ -81,7 +82,9 @@ deploy-all: deploy-traefik deploy-cert-manager deploy-rancher ## Deploy all serv
 # GitOps bootstrap (Fleet): SSH secret + GitRepo CRD. Run after deploy-rancher.
 # Requires: GITOPTS_SSH_KEY_PATH (private key for git clone), BOOTSTRAP_GITREPO_MANIFEST (path to main-repo.yaml).
 # -----------------------------------------------------------------------------
-bootstrap-gitops-secret: ## Create Fleet SSH secret in fleet-default for GitOps repo clone
+bootstrap-gitops-secret: ## Create Fleet SSH secret for GitOps repo clone
+	@test -n "$(FLEET_NS)" || (echo "Error: set FLEET_NS to the Fleet namespace." >&2 && exit 1)
+	@test -n "$(GITREPO_SECRET_NAME)" || (echo "Error: set GITREPO_SECRET_NAME to the SSH secret name." >&2 && exit 1)
 	@test -n "$(GITOPTS_SSH_KEY_PATH)" || (echo "Error: set GITOPTS_SSH_KEY_PATH to the private key path for GitOps repo clone." >&2 && exit 1)
 	@test -f "$(GITOPTS_SSH_KEY_PATH)" || (echo "Error: Private key file not found: $(GITOPTS_SSH_KEY_PATH)" >&2 && exit 1)
 	@echo "Creating Fleet SSH secret $(GITREPO_SECRET_NAME) in $(FLEET_NS)..."
