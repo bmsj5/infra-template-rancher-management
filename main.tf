@@ -28,7 +28,7 @@ data "local_file" "ssh_public_key" {
 # NOTE: Cloud provider specific - currently Hetzner Cloud
 # Replace with your provider's SSH key resource
 resource "hcloud_ssh_key" "default" {
-  name       = "${var.cluster_name}-ssh-key"
+  name       = "${var.cluster_name}"
   public_key = data.local_file.ssh_public_key.content
 }
 
