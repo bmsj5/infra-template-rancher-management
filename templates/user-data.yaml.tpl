@@ -20,8 +20,9 @@ write_files:
         - localhost
         - "${cluster_domain}"
       cni: [cilium]
+      # RKE2 defaults to bundled Traefik; we install our own via Helm (make deploy-traefik)
+      ingress-controller: none
       disable:
-        - rke2-ingress-nginx
         - rke2-snapshot-controller
         - rke2-snapshot-validation-webhook
       kubelet-arg:

@@ -22,9 +22,9 @@ Reusable Terraform/OpenTofu template for provisioning HA RKE2 clusters **specifi
 ## RKE2 Version Compatibility
 
 **Rancher 2.13.x supports:**
-- RKE2 v1.34.x (latest supported: `v1.34.2+rke2r1`)
+- RKE2 v1.34.x (latest supported: `v1.36.2+rke2r1`)
 
-**Current default:** `v1.34.2+rke2r1` (compatible with Rancher 2.13.x)
+**Current default:** `v1.36.2+rke2r1` (compatible with Rancher 2.13.x)
 
 Check [Rancher's support matrix](https://rancher.com/support-matrix/) for the latest compatibility information.
 
@@ -84,7 +84,8 @@ make apply
 ```
 
 6. **Deploy services:**
-   - After `make apply` completes, your infrastructure is ready and you can immediately proceed with service deployment using:
+   - After `make apply`, wait ~3 minutes for RKE2/etcd/API to settle (nodes Ready, system pods Running). Deploying too early causes Helm timeouts (`TLS handshake timeout`, `context deadline exceeded`).
+   - Then:
    - `make deploy-all` - Deploy all services (Traefik → cert-manager → Rancher)
    - `make deploy-traefik` - Deploy Traefik only
    - `make deploy-cert-manager` - Deploy cert-manager only
@@ -109,13 +110,19 @@ make apply
 ### GitOps bootstrap (Fleet)
 Run after Rancher is deployed. Requires `KUBECONFIG` (from Terraform output; used automatically).
 
-- `make bootstrap-gitops-secret` - Create Fleet SSH secret for private Git clone. **Required:** `GITOPTS_SSH_KEY_PATH` — path to private key (e.g. GitHub deploy key; PEM, no passphrase), `FLEET_NS` — Fleet namespace, `GITREPO_SECRET_NAME` — name for the SSH secret.
+- `make bootstrap-gitops-secret` - Create Fleet SSH secret for private Git clone. **Required:** `GITOPTS_SSH_KEY_PATH` — path to private key (e.g. GitHub deploy key; PEM/OpenSSH, no passphrase), `FLEET_NS` — must match GitRepo `metadata.namespace`, `GITREPO_SECRET_NAME` — must match GitRepo `spec.clientSecretName`.
 - `make bootstrap-gitops-repo` - Apply GitRepo CRD to register your GitOps repo. **Required:** `BOOTSTRAP_GITREPO_MANIFEST` — path to your GitRepo YAML file.
 - `make bootstrap-gitops` - Run both (secret first, then GitRepo).
 
+`FLEET_NS` / `GITREPO_SECRET_NAME` must match the GitRepo manifest (local management cluster → `fleet-local`, worker clusters → `fleet-default`).
+
 Example:
 ```bash
-make bootstrap-gitops FLEET_NS=fleet-default GITREPO_SECRET_NAME=skies-dota-gitops-ssh-key GITOPTS_SSH_KEY_PATH=~/.ssh/my-gitops-deploy-key BOOTSTRAP_GITREPO_MANIFEST=/path/to/your/gitrepo.yaml
+make bootstrap-gitops \
+  FLEET_NS=fleet-default \
+  GITREPO_SECRET_NAME=my-gitops-ssh-key \
+  GITOPTS_SSH_KEY_PATH=~/.ssh/my-gitops-deploy-key \
+  BOOTSTRAP_GITREPO_MANIFEST=/path/to/your/gitrepo.yaml
 ```
 
 ## Outputs

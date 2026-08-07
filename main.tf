@@ -282,9 +282,10 @@ resource "null_resource" "fetch_kubeconfig" {
 # Rancher Bootstrap Password
 # -----------------------------------------------------------------------------
 resource "random_password" "rancher_bootstrap" {
-  length  = 24
-  special = true
-  upper   = true
-  lower   = true
-  numeric = true
+  length           = 24
+  special          = true
+  upper            = true
+  lower            = true
+  numeric          = true
+  override_special = "!@#%^*-_+=?"
 }
